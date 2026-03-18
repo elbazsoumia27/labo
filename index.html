@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LaborLens — Workforce Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ─── Design Tokens ─────────────────────────────────── */
+    :root {
+      --ink:       #0d0d12;
+      --paper:     #f5f2eb;
+      --cream:     #ede9df;
+      --gold:      #c8a96e;
+      --gold-lt:   #e8d5a8;
+      --rust:      #b5441a;
+      --sage:      #4a6741;
+      --steel:     #2d4a5c;
+      --muted:     #7a7570;
+      --border:    rgba(13,13,18,.12);
+      --shadow:    0 2px 20px rgba(13,13,18,.07);
+      --ff-head:   'DM Serif Display', Georgia, serif;
+      --ff-body:   'DM Sans', sans-serif;
+      --ff-mono:   'JetBrains Mono', monospace;
+      --nav-h:     68px;
+      --ease:      cubic-bezier(.22,.68,0,1.2);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--ff-body);
+      background: var(--paper);
+      color: var(--ink);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ─── Noise Texture Overlay ─────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: .5;
+    }
+
+    /* ─── Typography ────────────────────────────────────── */
+    h1, h2, h3 { font-family: var(--ff-head); font-weight: 400; line-height: 1.15; }
+    h1 { font-size: clamp(3.2rem, 7vw, 6.4rem); letter-spacing: -.02em; }
+    h2 { font-size: clamp(2rem, 4vw, 3.2rem); }
+    h3 { font-size: 1.4rem; }
+    p  { color: var(--muted); }
+
+    /* ─── Utility ───────────────────────────────────────── */
+    .container { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--ff-mono); font-size: .72rem; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--gold);
+      background: rgba(200,169,110,.1); border: 1px solid rgba(200,169,110,.3);
+      padding: 5px 12px; border-radius: 2px;
+    }
+    .tag::before { content: '◆'; font-size: .55rem; }
+
+    /* ─── NAV ───────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 900;
+      height: var(--nav-h);
+      display: flex; align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: rgba(245,242,235,.88);
+      backdrop-filter: blur(14px);
+      transition: box-shadow .3s;
+    }
+    nav.scrolled { box-shadow: var(--shadow); }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%;
+    }
+    .logo {
+      font-family: var(--ff-head); font-size: 1.35rem; color: var(--ink);
+      text-decoration: none; display: flex; align-items: center; gap: 10px;
+    }
+    .logo-mark {
+      width: 34px; height: 34px; background: var(--ink); border-radius: 4px;
+      display: grid; place-items: center;
+    }
+    .logo-mark svg { width: 18px; height: 18px; }
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a {
+      font-size: .9rem; font-weight: 500; color: var(--muted);
+      text-decoration: none; transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-cta {
+      font-size: .875rem; font-weight: 600; color: var(--paper);
+      background: var(--ink); border: none; padding: 10px 22px;
+      border-radius: 4px; cursor: pointer; text-decoration: none;
+      transition: background .2s, transform .15s var(--ease);
+      display: inline-block;
+    }
+    .nav-cta:hover { background: var(--steel); transform: translateY(-1px); }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { width: 24px; height: 2px; background: var(--ink); border-radius: 2px; transition: all .3s; }
+
+    /* ─── HERO ──────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      padding-top: calc(var(--nav-h) + 60px);
+      display: grid; align-items: center;
+      position: relative; overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 70% 40%, rgba(200,169,110,.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 10% 80%, rgba(45,74,92,.08) 0%, transparent 50%);
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(13,13,18,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(13,13,18,.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .hero-content { position: relative; z-index: 2; }
+    .hero-inner {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center;
+    }
+    .hero-eyebrow { margin-bottom: 20px; }
+    .hero h1 { margin-bottom: 24px; }
+    .hero h1 em { font-style: italic; color: var(--gold); }
+    .hero-desc { font-size: 1.05rem; margin-bottom: 40px; max-width: 440px; }
+    .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--ink); color: var(--paper);
+      font-family: var(--ff-body); font-size: .95rem; font-weight: 600;
+      padding: 14px 28px; border-radius: 4px; border: none;
+      cursor: pointer; text-decoration: none;
+      transition: background .2s, transform .2s var(--ease), box-shadow .2s;
+    }
+    .btn-primary:hover { background: var(--steel); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(13,13,18,.15); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent; color: var(--ink);
+      font-family: var(--ff-body); font-size: .95rem; font-weight: 500;
+      padding: 14px 28px; border-radius: 4px; border: 1.5px solid var(--border);
+      cursor: pointer; text-decoration: none;
+      transition: border-color .2s, background .2s, transform .2s var(--ease);
+    }
+    .btn-secondary:hover { border-color: var(--ink); background: var(--cream); transform: translateY(-2px); }
+    .hero-stats {
+      display: flex; gap: 32px; margin-top: 48px; padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+    .stat-item {}
+    .stat-num {
+      font-family: var(--ff-head); font-size: 2rem; color: var(--ink);
+      display: block;
+    }
+    .stat-label { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+
+    /* ─── Dashboard Card ────────────────────────────────── */
+    .hero-visual { position: relative; }
+    .dashboard-card {
+      background: white; border-radius: 12px; padding: 28px;
+      box-shadow: 0 4px 40px rgba(13,13,18,.1), 0 1px 4px rgba(13,13,18,.06);
+      border: 1px solid rgba(13,13,18,.06);
+      transform: perspective(900px) rotateY(-6deg) rotateX(3deg);
+      transition: transform .4s var(--ease);
+    }
+    .dashboard-card:hover { transform: perspective(900px) rotateY(-2deg) rotateX(1deg); }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px;
+    }
+    .card-title { font-family: var(--ff-body); font-size: .85rem; font-weight: 600; color: var(--ink); }
+    .card-badge {
+      font-family: var(--ff-mono); font-size: .7rem; background: rgba(74,103,65,.1);
+      color: var(--sage); padding: 4px 10px; border-radius: 20px;
+    }
+    .chart-area {
+      height: 140px; position: relative; margin-bottom: 20px;
+    }
+    .chart-area canvas { width: 100% !important; height: 100% !important; }
+    .card-metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .metric {
+      background: var(--cream); border-radius: 8px; padding: 12px;
+      border: 1px solid var(--border);
+    }
+    .metric-val { font-family: var(--ff-head); font-size: 1.3rem; color: var(--ink); }
+    .metric-key { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+    .metric.up .metric-val { color: var(--sage); }
+    .metric.dn .metric-val { color: var(--rust); }
+    .floating-chip {
+      position: absolute; background: white;
+      border-radius: 8px; padding: 10px 14px;
+      box-shadow: 0 4px 20px rgba(13,13,18,.12);
+      border: 1px solid var(--border);
+      font-size: .8rem; white-space: nowrap;
+    }
+    .chip-a { top: -18px; right: 20px; }
+    .chip-b { bottom: -18px; left: 20px; }
+    .chip-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .chip-dot.green { background: #4CAF50; }
+    .chip-dot.amber { background: #FFC107; }
+
+    /* ─── FEATURES ──────────────────────────────────────── */
+    .features { padding: 120px 0; }
+    .section-head { text-align: center; margin-bottom: 70px; }
+    .section-head .tag { margin-bottom: 16px; }
+    .section-head h2 { margin-bottom: 16px; }
+    .section-head p { max-width: 500px; margin: 0 auto; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .feat-card {
+      background: white; padding: 40px 32px;
+      border-right: 1px solid var(--border);
+      transition: background .25s;
+      position: relative; overflow: hidden;
+    }
+    .feat-card:last-child { border-right: none; }
+    .feat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; background: var(--gold);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform .3s var(--ease);
+    }
+    .feat-card:hover { background: var(--cream); }
+    .feat-card:hover::before { transform: scaleX(1); }
+    .feat-icon {
+      width: 48px; height: 48px; border-radius: 8px;
+      display: grid; place-items: center; margin-bottom: 20px;
+      font-size: 1.4rem;
+    }
+    .feat-card h3 { margin-bottom: 10px; font-size: 1.2rem; }
+    .feat-card p { font-size: .9rem; }
+
+    /* ─── METRICS SECTION ───────────────────────────────── */
+    .metrics-section {
+      background: var(--ink); color: var(--paper);
+      padding: 100px 0; position: relative; overflow: hidden;
+    }
+    .metrics-section::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 80% 50%, rgba(200,169,110,.12) 0%, transparent 60%);
+    }
+    .metrics-inner { position: relative; z-index: 1; }
+    .metrics-section .tag { color: var(--gold-lt); border-color: rgba(232,213,168,.3); background: rgba(232,213,168,.08); }
+    .metrics-section h2 { color: var(--paper); margin: 16px 0 16px; }
+    .metrics-section > .container > p { color: rgba(245,242,235,.6); margin-bottom: 60px; max-width: 520px; }
+    .big-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: rgba(245,242,235,.08); border-radius: 12px; overflow: hidden; margin-bottom: 60px; }
+    .big-metric {
+      background: rgba(245,242,235,.04); padding: 36px 28px;
+      transition: background .25s;
+    }
+    .big-metric:hover { background: rgba(245,242,235,.08); }
+    .big-metric-num {
+      font-family: var(--ff-head); font-size: 3rem; color: var(--gold);
+      display: block; line-height: 1;
+    }
+    .big-metric-suffix { font-size: 1.6rem; }
+    .big-metric-label { font-size: .85rem; color: rgba(245,242,235,.55); margin-top: 8px; text-transform: uppercase; letter-spacing: .06em; }
+    .progress-rows { display: flex; flex-direction: column; gap: 20px; }
+    .progress-row { display: grid; grid-template-columns: 200px 1fr 60px; gap: 16px; align-items: center; }
+    .progress-name { font-size: .88rem; color: rgba(245,242,235,.7); }
+    .progress-bar-wrap { height: 6px; background: rgba(245,242,235,.1); border-radius: 3px; overflow: hidden; }
+    .progress-bar {
+      height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-lt));
+      width: 0; transition: width 1.4s var(--ease);
+    }
+    .progress-pct { font-family: var(--ff-mono); font-size: .8rem; color: var(--gold); text-align: right; }
+
+    /* ─── HOW IT WORKS ──────────────────────────────────── */
+    .how { padding: 120px 0; }
+    .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .how-steps { display: flex; flex-direction: column; gap: 0; }
+    .step {
+      display: grid; grid-template-columns: 48px 1fr; gap: 20px;
+      padding: 28px 0; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: padding-left .3s var(--ease);
+    }
+    .step:first-child { padding-top: 0; }
+    .step:last-child { border-bottom: none; }
+    .step:hover { padding-left: 8px; }
+    .step-num {
+      font-family: var(--ff-mono); font-size: .8rem; color: var(--gold);
+      background: rgba(200,169,110,.1); border: 1px solid rgba(200,169,110,.3);
+      width: 34px; height: 34px; border-radius: 4px;
+      display: grid; place-items: center; flex-shrink: 0; margin-top: 3px;
+    }
+    .step h3 { font-size: 1.1rem; margin-bottom: 6px; }
+    .step p { font-size: .88rem; }
+    .how-visual {
+      position: relative; padding: 32px;
+      background: var(--cream); border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+    .how-tabs { display: flex; gap: 2px; background: var(--border); border-radius: 6px; padding: 3px; margin-bottom: 24px; }
+    .how-tab {
+      flex: 1; text-align: center; padding: 7px; border-radius: 4px;
+      font-size: .8rem; font-weight: 500; cursor: pointer; border: none;
+      background: transparent; color: var(--muted);
+      transition: background .2s, color .2s;
+    }
+    .how-tab.active { background: white; color: var(--ink); box-shadow: 0 1px 4px rgba(13,13,18,.08); }
+    .how-panel { display: none; }
+    .how-panel.active { display: block; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .data-table th {
+      text-align: left; padding: 8px 10px; font-family: var(--ff-mono); font-size: .7rem;
+      text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td { padding: 10px; border-bottom: 1px solid rgba(13,13,18,.05); color: var(--ink); }
+    .data-table tr:hover td { background: rgba(13,13,18,.02); }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: .72rem; font-weight: 600;
+    }
+    .badge.up { background: rgba(74,103,65,.12); color: var(--sage); }
+    .badge.dn { background: rgba(181,68,26,.1); color: var(--rust); }
+    .badge.nt { background: rgba(200,169,110,.1); color: #9a7a3a; }
+
+    /* ─── TESTIMONIALS ──────────────────────────────────── */
+    .testimonials { padding: 100px 0; background: var(--cream); }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 60px; }
+    .testimonial {
+      background: white; border-radius: 10px; padding: 32px;
+      border: 1px solid var(--border);
+      transition: transform .25s var(--ease), box-shadow .25s;
+    }
+    .testimonial:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(13,13,18,.09); }
+    .testi-quote { font-family: var(--ff-head); font-size: 1.05rem; color: var(--ink); line-height: 1.55; margin-bottom: 24px; }
+    .testi-quote::before { content: '\201C'; color: var(--gold); font-size: 2rem; line-height: 0; vertical-align: -.3em; margin-right: 4px; }
+    .testi-author { display: flex; align-items: center; gap: 12px; }
+    .testi-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--ink); display: grid; place-items: center;
+      font-family: var(--ff-head); font-size: 1rem; color: var(--gold); flex-shrink: 0;
+    }
+    .testi-name { font-size: .88rem; font-weight: 600; color: var(--ink); }
+    .testi-role { font-size: .78rem; color: var(--muted); }
+
+    /* ─── PRICING ───────────────────────────────────────── */
+    .pricing { padding: 120px 0; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 60px; }
+    .price-card {
+      border-radius: 12px; padding: 36px 30px;
+      border: 1.5px solid var(--border); background: white;
+      transition: transform .25s var(--ease), box-shadow .25s, border-color .25s;
+      position: relative; overflow: hidden;
+    }
+    .price-card:hover { transform: translateY(-4px); box-shadow: 0 16px 50px rgba(13,13,18,.09); }
+    .price-card.featured {
+      background: var(--ink); color: var(--paper); border-color: var(--ink);
+    }
+    .price-card.featured p { color: rgba(245,242,235,.55); }
+    .popular-badge {
+      position: absolute; top: 16px; right: 16px;
+      font-family: var(--ff-mono); font-size: .65rem; text-transform: uppercase; letter-spacing: .08em;
+      background: var(--gold); color: var(--ink); padding: 4px 10px; border-radius: 20px;
+      font-weight: 700;
+    }
+    .price-tier { font-size: .85rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 12px; }
+    .price-card.featured .price-tier { color: rgba(245,242,235,.5); }
+    .price-amount { font-family: var(--ff-head); font-size: 2.8rem; margin-bottom: 4px; line-height: 1; }
+    .price-amount sup { font-size: 1.2rem; vertical-align: super; }
+    .price-period { font-size: .8rem; color: var(--muted); margin-bottom: 24px; }
+    .price-card.featured .price-period { color: rgba(245,242,235,.5); }
+    .price-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    .price-card.featured .price-divider { border-color: rgba(245,242,235,.12); }
+    .price-features { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+    .price-features li { font-size: .88rem; display: flex; gap: 10px; align-items: flex-start; }
+    .price-features li::before { content: '✓'; color: var(--gold); font-weight: 700; flex-shrink: 0; }
+    .price-card.featured .price-features li { color: rgba(245,242,235,.8); }
+    .btn-plan {
+      width: 100%; padding: 13px; border-radius: 6px; border: 1.5px solid var(--ink);
+      font-family: var(--ff-body); font-size: .9rem; font-weight: 600;
+      cursor: pointer; transition: all .2s var(--ease); background: transparent; color: var(--ink);
+    }
+    .btn-plan:hover { background: var(--ink); color: var(--paper); }
+    .price-card.featured .btn-plan {
+      background: var(--gold); color: var(--ink); border-color: var(--gold);
+    }
+    .price-card.featured .btn-plan:hover { background: var(--gold-lt); }
+
+    /* ─── CTA BANNER ────────────────────────────────────── */
+    .cta-banner {
+      padding: 100px 0;
+      background: linear-gradient(135deg, var(--steel) 0%, var(--ink) 60%);
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-banner::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(200,169,110,.18) 0%, transparent 65%);
+    }
+    .cta-banner .container { position: relative; z-index: 1; }
+    .cta-banner h2 { color: var(--paper); margin-bottom: 16px; }
+    .cta-banner p { color: rgba(245,242,235,.6); margin-bottom: 40px; font-size: 1.05rem; }
+    .cta-input-group {
+      display: flex; gap: 0; max-width: 460px; margin: 0 auto;
+      border-radius: 6px; overflow: hidden;
+      box-shadow: 0 8px 30px rgba(13,13,18,.25);
+    }
+    .cta-input {
+      flex: 1; padding: 15px 20px; border: none; outline: none;
+      font-family: var(--ff-body); font-size: .95rem; background: white;
+    }
+    .cta-submit {
+      padding: 15px 24px; background: var(--gold); color: var(--ink);
+      border: none; cursor: pointer; font-family: var(--ff-body); font-weight: 700;
+      font-size: .9rem; white-space: nowrap;
+      transition: background .2s;
+    }
+    .cta-submit:hover { background: var(--gold-lt); }
+
+    /* ─── FOOTER ────────────────────────────────────────── */
+    footer {
+      background: var(--ink); color: rgba(245,242,235,.5);
+      padding: 64px 0 32px;
+    }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 56px; }
+    .footer-brand .logo { color: var(--paper); margin-bottom: 16px; display: block; }
+    .footer-brand p { font-size: .88rem; max-width: 240px; }
+    .footer-col h4 { font-family: var(--ff-body); font-size: .85rem; font-weight: 600; color: var(--paper); margin-bottom: 16px; text-transform: uppercase; letter-spacing: .06em; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col a { color: rgba(245,242,235,.5); text-decoration: none; font-size: .88rem; transition: color .2s; }
+    .footer-col a:hover { color: var(--paper); }
+    .footer-bottom {
+      border-top: 1px solid rgba(245,242,235,.08); padding-top: 28px;
+      display: flex; justify-content: space-between; align-items: center; font-size: .82rem;
+    }
+
+    /* ─── SCROLL ANIMATIONS ─────────────────────────────── */
+    .reveal {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity .7s ease, transform .7s var(--ease);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: .1s; }
+    .reveal-delay-2 { transition-delay: .2s; }
+    .reveal-delay-3 { transition-delay: .3s; }
+
+    /* ─── RESPONSIVE ────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2,1fr); }
+      .features-grid .feat-card:nth-child(2) { border-right: none; }
+      .big-metrics { grid-template-columns: repeat(2,1fr); }
+      .how-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .features-grid { grid-template-columns: 1fr; }
+      .feat-card { border-right: none; border-bottom: 1px solid var(--border); }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .big-metrics { grid-template-columns: 1fr 1fr; }
+      .progress-row { grid-template-columns: 1fr; gap: 6px; }
+      .progress-name { font-weight: 600; }
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .mobile-menu {
+        position: fixed; top: var(--nav-h); left: 0; right: 0;
+        background: var(--paper); border-bottom: 1px solid var(--border);
+        padding: 24px 28px; display: none; flex-direction: column; gap: 20px; z-index: 800;
+      }
+      .mobile-menu.open { display: flex; }
+      .mobile-menu a { font-size: 1rem; color: var(--ink); text-decoration: none; font-weight: 500; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ──────────────────────────────────────────────── -->
+<nav id="navbar">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="9" width="3" height="8" rx="1" fill="#c8a96e"/>
+            <rect x="5.5" y="5" width="3" height="12" rx="1" fill="#c8a96e"/>
+            <rect x="10" y="2" width="3" height="15" rx="1" fill="#f5f2eb"/>
+            <rect x="14.5" y="6" width="3" height="11" rx="1" fill="#f5f2eb" opacity=".5"/>
+          </svg>
+        </div>
+        LaborLens
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#metrics">Analytics</a></li>
+        <li><a href="#how">How It Works</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+      </ul>
+      <a href="#cta" class="nav-cta">Request Demo</a>
+      <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features" onclick="toggleMenu()">Features</a>
+  <a href="#metrics" onclick="toggleMenu()">Analytics</a>
+  <a href="#how" onclick="toggleMenu()">How It Works</a>
+  <a href="#pricing" onclick="toggleMenu()">Pricing</a>
+  <a href="#cta" class="btn-primary" onclick="toggleMenu()">Request Demo</a>
+</div>
+
+<!-- ─── HERO ──────────────────────────────────────────────── -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="container hero-content">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-eyebrow">
+          <span class="tag">Workforce Intelligence Platform</span>
+        </div>
+        <h1>Decode your<br/><em>Labor Market</em><br/>with precision</h1>
+        <p class="hero-desc">Real-time workforce analytics for HR strategists, economists, and operations leaders. Turn raw labor data into competitive advantage.</p>
+        <div class="hero-actions">
+          <a href="#cta" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l6 7-6 7M2 8h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Start Analysing
+          </a>
+          <a href="#how" class="btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 5.5L10.5 8l-4 2.5V5.5z" fill="currentColor"/></svg>
+            See Demo
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-num" data-target="2.4">0</span>
+            <span class="stat-label">M+ Data points</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num" data-target="98">0</span>
+            <span class="stat-label">% Accuracy</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num" data-target="140">0</span>
+            <span class="stat-label">+ Countries</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="floating-chip chip-a">
+          <span class="chip-dot green"></span> Unemployment Rate ↓ 0.3%
+        </div>
+        <div class="dashboard-card">
+          <div class="card-header">
+            <span class="card-title">Employment Trend — Q1 2026</span>
+            <span class="card-badge">● Live</span>
+          </div>
+          <div class="chart-area">
+            <canvas id="heroChart"></canvas>
+          </div>
+          <div class="card-metrics">
+            <div class="metric up">
+              <div class="metric-val">+4.2%</div>
+              <div class="metric-key">Job Growth</div>
+            </div>
+            <div class="metric dn">
+              <div class="metric-val">3.8%</div>
+              <div class="metric-key">Unemployment</div>
+            </div>
+            <div class="metric">
+              <div class="metric-val">$58k</div>
+              <div class="metric-key">Avg. Salary</div>
+            </div>
+          </div>
+        </div>
+        <div class="floating-chip chip-b">
+          <span class="chip-dot amber"></span> Wage inflation: +2.1% MoM
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FEATURES ──────────────────────────────────────────── -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="tag">Core Capabilities</span>
+      <h2>Everything your team needs</h2>
+      <p>From macroeconomic trend detection to granular department-level workforce planning.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card reveal reveal-delay-1">
+        <div class="feat-icon" style="background:rgba(200,169,110,.1)">📊</div>
+        <h3>Real-time Market Data</h3>
+        <p>Live feeds from 200+ labor bureaus and survey sources. Updated hourly with anomaly detection and confidence scoring.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-2">
+        <div class="feat-icon" style="background:rgba(74,103,65,.1)">🔮</div>
+        <h3>Predictive Forecasting</h3>
+        <p>ML-powered models predict sector-level hiring demand up to 18 months ahead. Tune by region, role, or industry vertical.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-3">
+        <div class="feat-icon" style="background:rgba(45,74,92,.1)">🗺️</div>
+        <h3>Geo-spatial Mapping</h3>
+        <p>Interactive heat maps visualizing talent density, wage gradients, and migration patterns at city or postcode resolution.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-1">
+        <div class="feat-icon" style="background:rgba(181,68,26,.1)">⚖️</div>
+        <h3>Compensation Benchmarks</h3>
+        <p>Salary bands, equity ratios, and total compensation analytics across 800+ roles, updated in real time from verified payroll data.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-2">
+        <div class="feat-icon" style="background:rgba(200,169,110,.1)">📈</div>
+        <h3>Attrition Intelligence</h3>
+        <p>Identify flight-risk segments before they resign. Cross-reference tenure, market conditions, and role satisfaction signals.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-3">
+        <div class="feat-icon" style="background:rgba(74,103,65,.1)">🔗</div>
+        <h3>HRIS Integration</h3>
+        <p>Plug-and-play connectors for Workday, SAP SuccessFactors, BambooHR, and 40+ other systems. No-code setup in minutes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── METRICS ───────────────────────────────────────────── -->
+<section class="metrics-section" id="metrics">
+  <div class="container metrics-inner">
+    <span class="tag">Impact by the Numbers</span>
+    <h2>Data that drives decisions</h2>
+    <p>Our platform processes millions of labor records daily to deliver actionable intelligence your leadership can act on immediately.</p>
+
+    <div class="big-metrics">
+      <div class="big-metric reveal">
+        <span class="big-metric-num" data-target="340">0</span><span class="big-metric-label">Enterprise clients</span>
+      </div>
+      <div class="big-metric reveal reveal-delay-1">
+        <span class="big-metric-num" data-target="99.7">0</span><span class="big-metric-label">% Uptime SLA</span>
+      </div>
+      <div class="big-metric reveal reveal-delay-2">
+        <span class="big-metric-num" data-target="28">0</span><span class="big-metric-label">% Avg. time-to-hire reduction</span>
+      </div>
+      <div class="big-metric reveal reveal-delay-3">
+        <span class="big-metric-num" data-target="4.2">0</span><span class="big-metric-label">× ROI avg. first year</span>
+      </div>
+    </div>
+
+    <div class="progress-rows" id="progressSection">
+      <div class="progress-row">
+        <span class="progress-name">Technology Sector</span>
+        <div class="progress-bar-wrap"><div class="progress-bar" data-w="87"></div></div>
+        <span class="progress-pct">87%</span>
+      </div>
+      <div class="progress-row">
+        <span class="progress-name">Healthcare</span>
+        <div class="progress-bar-wrap"><div class="progress-bar" data-w="73"></div></div>
+        <span class="progress-pct">73%</span>
+      </div>
+      <div class="progress-row">
+        <span class="progress-name">Financial Services</span>
+        <div class="progress-bar-wrap"><div class="progress-bar" data-w="91"></div></div>
+        <span class="progress-pct">91%</span>
+      </div>
+      <div class="progress-row">
+        <span class="progress-name">Manufacturing</span>
+        <div class="progress-bar-wrap"><div class="progress-bar" data-w="62"></div></div>
+        <span class="progress-pct">62%</span>
+      </div>
+      <div class="progress-row">
+        <span class="progress-name">Retail & Commerce</span>
+        <div class="progress-bar-wrap"><div class="progress-bar" data-w="55"></div></div>
+        <span class="progress-pct">55%</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ──────────────────────────────────────── -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="tag">Process</span>
+      <h2>Insight in four steps</h2>
+      <p>From raw workforce data to strategic clarity in under a minute.</p>
+    </div>
+    <div class="how-grid">
+      <div class="how-steps">
+        <div class="step reveal">
+          <div class="step-num">01</div>
+          <div>
+            <h3>Connect your data sources</h3>
+            <p>Integrate your HRIS, ATS, payroll system and external labor feeds via our pre-built connectors or REST API.</p>
+          </div>
+        </div>
+        <div class="step reveal reveal-delay-1">
+          <div class="step-num">02</div>
+          <div>
+            <h3>Configure your analysis</h3>
+            <p>Select dimensions: region, function, pay band, seniority. Apply industry benchmarks or custom peer groups.</p>
+          </div>
+        </div>
+        <div class="step reveal reveal-delay-2">
+          <div class="step-num">03</div>
+          <div>
+            <h3>Explore the intelligence</h3>
+            <p>Interactive dashboards surface anomalies, trends, and leading indicators automatically — no SQL required.</p>
+          </div>
+        </div>
+        <div class="step reveal reveal-delay-3">
+          <div class="step-num">04</div>
+          <div>
+            <h3>Export & share reports</h3>
+            <p>Publish board-ready reports as PDF, slide decks, or live embeds. Schedule automated delivery to stakeholders.</p>
+          </div>
+        </div>
+      </div>
+      <div class="how-visual reveal">
+        <div class="how-tabs">
+          <button class="how-tab active" onclick="switchTab(this,'overview')">Overview</button>
+          <button class="how-tab" onclick="switchTab(this,'roles')">By Role</button>
+          <button class="how-tab" onclick="switchTab(this,'regions')">By Region</button>
+        </div>
+        <div class="how-panel active" id="tab-overview">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Metric</th><th>Current</th><th>Prior Month</th><th>Δ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Avg. Fill Time</td><td>23 days</td><td>27 days</td><td><span class="badge up">–15%</span></td></tr>
+              <tr><td>Offer Acceptance</td><td>84%</td><td>79%</td><td><span class="badge up">+5pp</span></td></tr>
+              <tr><td>90-Day Attrition</td><td>6.2%</td><td>8.1%</td><td><span class="badge up">–24%</span></td></tr>
+              <tr><td>Headcount Growth</td><td>+112</td><td>+94</td><td><span class="badge up">+19%</span></td></tr>
+              <tr><td>Salary Overspend</td><td>2.4%</td><td>1.8%</td><td><span class="badge dn">+0.6pp</span></td></tr>
+              <tr><td>Vacancy Rate</td><td>4.1%</td><td>5.3%</td><td><span class="badge up">–23%</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="how-panel" id="tab-roles">
+          <table class="data-table">
+            <thead>
+              <tr><th>Role Family</th><th>Open Reqs</th><th>Avg. Salary</th><th>Market</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Engineering</td><td>47</td><td>$128k</td><td><span class="badge dn">Hot</span></td></tr>
+              <tr><td>Product</td><td>18</td><td>$115k</td><td><span class="badge nt">Warm</span></td></tr>
+              <tr><td>Sales</td><td>34</td><td>$92k</td><td><span class="badge up">Stable</span></td></tr>
+              <tr><td>Data & Analytics</td><td>22</td><td>$134k</td><td><span class="badge dn">Hot</span></td></tr>
+              <tr><td>Operations</td><td>15</td><td>$78k</td><td><span class="badge up">Stable</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="how-panel" id="tab-regions">
+          <table class="data-table">
+            <thead>
+              <tr><th>Region</th><th>Unempl.</th><th>Job Postings</th><th>Trend</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>North America</td><td>3.8%</td><td>+142k</td><td><span class="badge up">↑</span></td></tr>
+              <tr><td>Europe</td><td>5.2%</td><td>+89k</td><td><span class="badge nt">→</span></td></tr>
+              <tr><td>Asia-Pacific</td><td>4.1%</td><td>+210k</td><td><span class="badge up">↑</span></td></tr>
+              <tr><td>Middle East</td><td>6.3%</td><td>+34k</td><td><span class="badge up">↑</span></td></tr>
+              <tr><td>Latin America</td><td>7.8%</td><td>+28k</td><td><span class="badge dn">↓</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TESTIMONIALS ──────────────────────────────────────── -->
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="tag">Social Proof</span>
+      <h2>Trusted by workforce leaders</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial reveal">
+        <p class="testi-quote">LaborLens transformed how our CHRO presents to the board. We went from gut-feel headcount plans to defensible, data-backed workforce strategies within one quarter.</p>
+        <div class="testi-author">
+          <div class="testi-avatar">S</div>
+          <div>
+            <div class="testi-name">Sofia Andersson</div>
+            <div class="testi-role">VP People Ops · NordEx Group</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial reveal reveal-delay-1">
+        <p class="testi-quote">The attrition predictor alone saved us an estimated $1.2M in replacement costs last year. The ROI case wrote itself after month two.</p>
+        <div class="testi-author">
+          <div class="testi-avatar">R</div>
+          <div>
+            <div class="testi-name">Rajan Mehta</div>
+            <div class="testi-role">Chief HR Officer · Crestline Financial</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial reveal reveal-delay-2">
+        <p class="testi-quote">We benchmark compensation across 14 markets. LaborLens gives us granular salary intelligence that no consulting report can match for speed or accuracy.</p>
+        <div class="testi-author">
+          <div class="testi-avatar">M</div>
+          <div>
+            <div class="testi-name">Mireille Fontaine</div>
+            <div class="testi-role">Compensation Director · AeroLogis SA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PRICING ───────────────────────────────────────────── -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="tag">Pricing</span>
+      <h2>Plans for every scale</h2>
+      <p>Transparent pricing with no hidden data fees. All plans include SOC 2 Type II compliance.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card reveal">
+        <div class="price-tier">Starter</div>
+        <div class="price-amount"><sup>$</sup>299</div>
+        <div class="price-period">per month, billed annually</div>
+        <hr class="price-divider"/>
+        <ul class="price-features">
+          <li>Up to 500 employee records</li>
+          <li>5 dashboards & reports</li>
+          <li>National benchmark data</li>
+          <li>2 HRIS integrations</li>
+          <li>Email support</li>
+        </ul>
+        <button class="btn-plan">Get Started</button>
+      </div>
+      <div class="price-card featured reveal reveal-delay-1">
+        <div class="popular-badge">Most Popular</div>
+        <div class="price-tier">Professional</div>
+        <div class="price-amount"><sup>$</sup>899</div>
+        <div class="price-period">per month, billed annually</div>
+        <hr class="price-divider"/>
+        <ul class="price-features">
+          <li>Up to 5,000 employee records</li>
+          <li>Unlimited dashboards</li>
+          <li>Global & regional benchmarks</li>
+          <li>10 HRIS integrations</li>
+          <li>Predictive attrition module</li>
+          <li>Geo-spatial mapping</li>
+          <li>Priority support + CSM</li>
+        </ul>
+        <button class="btn-plan">Start Free Trial</button>
+      </div>
+      <div class="price-card reveal reveal-delay-2">
+        <div class="price-tier">Enterprise</div>
+        <div class="price-amount">Custom</div>
+        <div class="price-period">volume-based pricing</div>
+        <hr class="price-divider"/>
+        <ul class="price-features">
+          <li>Unlimited records</li>
+          <li>Custom data pipelines</li>
+          <li>Private cloud deployment</li>
+          <li>Unlimited integrations</li>
+          <li>SLA 99.99% uptime</li>
+          <li>Dedicated data science team</li>
+          <li>Executive business reviews</li>
+        </ul>
+        <button class="btn-plan">Contact Sales</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA BANNER ────────────────────────────────────────── -->
+<section class="cta-banner" id="cta">
+  <div class="container">
+    <h2>Ready to decode your workforce?</h2>
+    <p>Join 340+ enterprises using LaborLens. First 14 days free, no credit card required.</p>
+    <div class="cta-input-group">
+      <input type="email" class="cta-input" placeholder="Enter your work email…" id="ctaEmail"/>
+      <button class="cta-submit" onclick="handleCTA()">Get Access →</button>
+    </div>
+    <p id="ctaMsg" style="margin-top:14px;font-size:.85rem;color:rgba(232,213,168,.8);min-height:20px;"></p>
+  </div>
+</section>
+
+<!-- ─── FOOTER ────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="logo">
+          <div class="logo-mark">
+            <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="9" width="3" height="8" rx="1" fill="#c8a96e"/>
+              <rect x="5.5" y="5" width="3" height="12" rx="1" fill="#c8a96e"/>
+              <rect x="10" y="2" width="3" height="15" rx="1" fill="#f5f2eb"/>
+              <rect x="14.5" y="6" width="3" height="11" rx="1" fill="#f5f2eb" opacity=".5"/>
+            </svg>
+          </div>
+          LaborLens
+        </a>
+        <p>Workforce intelligence that turns labor data into strategic clarity for modern enterprises.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Pricing</a></li>
+          <li><a href="#">Changelog</a></li>
+          <li><a href="#">Roadmap</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">API Reference</a></li>
+          <li><a href="#">Case Studies</a></li>
+          <li><a href="#">Labor Reports</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 LaborLens Technologies. All rights reserved.</span>
+      <span>Built for HR leaders, economists & workforce strategists.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ─── Chart.js CDN ──────────────────────────────────────── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+<script>
+  /* ── Nav scroll ── */
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 30);
+  });
+
+  /* ── Mobile menu ── */
+  function toggleMenu() {
+    document.getElementById('mobileMenu').classList.toggle('open');
+  }
+
+  /* ── Reveal on scroll ── */
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  revealEls.forEach(el => io.observe(el));
+
+  /* ── Counter animation ── */
+  function animateCounter(el) {
+    const target = parseFloat(el.dataset.target);
+    const isDecimal = target % 1 !== 0;
+    const duration = 1600;
+    const start = performance.now();
+    function step(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const val = target * ease;
+      el.textContent = isDecimal ? val.toFixed(1) : Math.floor(val);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  const counterEls = document.querySelectorAll('[data-target]');
+  const counterIO = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { animateCounter(e.target); counterIO.unobserve(e.target); } });
+  }, { threshold: 0.5 });
+  counterEls.forEach(el => counterIO.observe(el));
+
+  /* ── Progress bars ── */
+  const progressBars = document.querySelectorAll('.progress-bar');
+  const progressIO = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.progress-bar').forEach(bar => {
+          setTimeout(() => { bar.style.width = bar.dataset.w + '%'; }, 200);
+        });
+        progressIO.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  const progressSection = document.getElementById('progressSection');
+  if (progressSection) progressIO.observe(progressSection);
+
+  /* ── How It Works tabs ── */
+  function switchTab(btn, id) {
+    document.querySelectorAll('.how-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.how-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + id).classList.add('active');
+  }
+
+  /* ── Hero Chart ── */
+  const ctx = document.getElementById('heroChart').getContext('2d');
+  const labels = ['Oct','Nov','Dec','Jan','Feb','Mar'];
+  const data = [148, 162, 155, 174, 189, 203];
+  const grad = ctx.createLinearGradient(0, 0, 0, 140);
+  grad.addColorStop(0, 'rgba(200,169,110,.25)');
+  grad.addColorStop(1, 'rgba(200,169,110,0)');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: '#c8a96e',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#c8a96e',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        fill: true,
+        backgroundColor: grad,
+        tension: 0.45
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: '#0d0d12', titleColor: '#f5f2eb', bodyColor: '#c8a96e',
+        padding: 10, cornerRadius: 6, displayColors: false,
+        callbacks: { label: (c) => `  ${c.raw}k jobs added` }
+      }},
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#7a7570', font: { size: 11 } } },
+        y: { display: false }
+      }
+    }
+  });
+
+  /* ── CTA form ── */
+  function handleCTA() {
+    const email = document.getElementById('ctaEmail').value;
+    const msg = document.getElementById('ctaMsg');
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!re.test(email)) {
+      msg.textContent = '⚠ Please enter a valid work email address.';
+      msg.style.color = 'rgba(255,160,120,.85)';
+      return;
+    }
+    msg.textContent = '✓ You\'re on the list! We\'ll be in touch within 24 hours.';
+    msg.style.color = 'rgba(200,169,110,.9)';
+    document.getElementById('ctaEmail').value = '';
+  }
+  document.getElementById('ctaEmail').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleCTA();
+  });
+</script>
+</body>
+</html>
