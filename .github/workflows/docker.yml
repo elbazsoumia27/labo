@@ -24,21 +24,3 @@ jobs:
 
       - name: Push image
         run: docker push saidwahidtekno/gestionretard:latest
-```
-
-**6. Scroll down → Click green button `Commit changes`**
-**7. Click `Commit changes` again to confirm**
-
----
-
-## ⚠️ Key Rules for YAML
-```
-❌ WRONG — no spaces:
-jobs:
-docker:
-runs-on: ubuntu-latest
-
-✅ CORRECT — 2 spaces indentation:
-jobs:
-  docker:
-    runs-on: ubuntu-latest
