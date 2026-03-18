@@ -1,14 +1,26 @@
-# Stage 1 — Build
-FROM node:18-alpine AS builder
-WORKDIR /app
-COPY . .
-RUN npm install --omit=dev 2>/dev/null || true
+name: Docker Auto Deploy
 
-# Stage 2 — Serve
-FROM nginx:alpine
-WORKDIR /usr/share/nginx/html
-COPY --from=builder /app /usr/share/nginx/html
+on:
+  push:
+    branches:
+      - main
 
-# Expose port
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cloner le repo
+        uses: actions/checkout@v3
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build image
+        run: docker build -t soumiaelbaz/gestionretard:latest .
+
+      - name: Push image
+        run: docker push soumiaelbaz/gestionretard:latest
